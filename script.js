@@ -23,21 +23,27 @@ document.getElementById('split-bill-form').addEventListener('submit', function(e
     const splitAmount = (billAmount / numberOfPeople).toFixed(2);
     document.getElementById('split-result').innerText = `Each person should pay: $${splitAmount}`;
 });
-document.addEventListener("DOMContentLoaded", () => {
-    const expenseForm = document.getElementById("expense-form");
-    const expenseList = document.getElementById("expense-list");
-    const totalAmount = document.getElementById("total-amount");
-    const filterCategory = document.getElementById("filter-category");
 
-    let expenses = [];
+document.addEventListener('DOMContentLoaded', function() {
+    const expenseForm = document.getElementById('expense-form');
+    const expenseList = document.getElementById('expense-list');
+    const totalAmount = document.getElementById('total-amount');
+    const filterCategory = document.getElementById('filter-category');
 
-    expenseForm.addEventListener("submit", (e) => {
-        e.preventDefault();
+    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
 
-        const name = document.getElementById("expense-name").value;
-        const amount = parseFloat(document.getElementById("expense-amount").value);
-        const category = document.getElementById("expense-category").value;
-        const date = document.getElementById("expense-date").value;
+    expenseForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('expense-name').value;
+        const amount = parseFloat(document.getElementById('expense-amount').value);
+        const category = document.getElementById('expense-category').value;
+        const date = document.getElementById('expense-date').value;
+
+        if (!name || isNaN(amount) || !category || !date) {
+            alert('Please fill in all fields.');
+            return;
+        }
 
         const expense = {
             id: Date.now(),
@@ -50,36 +56,39 @@ document.addEventListener("DOMContentLoaded", () => {
         expenses.push(expense);
         displayExpenses(expenses);
         updateTotalAmount();
+        saveExpenses(expenses);
 
         expenseForm.reset();
     });
 
-    expenseList.addEventListener("click", (e) => {
-        if (e.target.classList.contains("delete-btn")) {
-            const id = parseInt(e.target.dataset.id);
+    expenseList.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-btn')) {
+            const id = parseInt(event.target.dataset.id);
             expenses = expenses.filter(expense => expense.id !== id);
             displayExpenses(expenses);
             updateTotalAmount();
+            saveExpenses(expenses);
         }
 
-        if (e.target.classList.contains("edit-btn")) {
-            const id = parseInt(e.target.dataset.id);
+        if (event.target.classList.contains('edit-btn')) {
+            const id = parseInt(event.target.dataset.id);
             const expense = expenses.find(expense => expense.id === id);
 
-            document.getElementById("expense-name").value = expense.name;
-            document.getElementById("expense-amount").value = expense.amount;
-            document.getElementById("expense-category").value = expense.category;
-            document.getElementById("expense-date").value = expense.date;
+            document.getElementById('expense-name').value = expense.name;
+            document.getElementById('expense-amount').value = expense.amount;
+            document.getElementById('expense-category').value = expense.category;
+            document.getElementById('expense-date').value = expense.date;
 
             expenses = expenses.filter(expense => expense.id !== id);
             displayExpenses(expenses);
             updateTotalAmount();
+            saveExpenses(expenses);
         }
     });
 
-    filterCategory.addEventListener("change", (e) => {
-        const category = e.target.value;
-        if (category === "All") {
+    filterCategory.addEventListener('change', function(event) {
+        const category = event.target.value;
+        if (category === 'All') {
             displayExpenses(expenses);
         } else {
             const filteredExpenses = expenses.filter(expense => expense.category === category);
@@ -88,9 +97,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function displayExpenses(expenses) {
-        expenseList.innerHTML = "";
+        expenseList.innerHTML = '';
         expenses.forEach(expense => {
-            const row = document.createElement("tr");
+            const row = document.createElement('tr');
 
             row.innerHTML = `
                 <td>${expense.name}</td>
@@ -111,4 +120,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
         totalAmount.textContent = total.toFixed(2);
     }
+
+    function saveExpenses(expenses) {
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+    }
+
+    // Initial display of expenses
+    displayExpenses(expenses);
+    updateTotalAmount();
 });
